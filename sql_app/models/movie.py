@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Float,Integer, String
+##Local Modules
+from sql_app.config.database import Base
 
-from config.database import Base
-
+##SQL Alchemy
+from sqlalchemy import Column, Float, Integer, String
 class Movie(Base):
     __tablename__ = "movies"
 

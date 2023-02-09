@@ -10,7 +10,7 @@ from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer
 
-#SQL
+#Local Modules
 from sql_app.config.database import Base, Engine, SessionLocal
 from sql_app.models.movie import Movie
 
