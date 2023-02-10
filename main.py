@@ -1,18 +1,23 @@
 #Python
-from typing import Optional, List # Para especificar un campo opcional en el esquema BaseModel
+from typing import List # Para especificar un campo opcional en el esquema BaseModel
 from jwt_manager import create_token, validate_token
+from uuid import UUID
 
 #Pydantic
-from pydantic import BaseModel, Field
+from pydantic import EmailStr
 
 #FastAPI
-from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
+from fastapi import FastAPI
+from fastapi import Body, Form, Path, Query, Request, HTTPException, Depends
+from fastapi import status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer
 
 #Local Modules
-from sql_app.config.database import Base, Engine, SessionLocal
-from sql_app.models.movie import Movie
+from sql_app import crud
+from sql_app.schemas import UserBase, Movie
+from sql_app.database import Base, Engine, SessionLocal
+from sql_app.models import Movie as MovieModel
 
 
 app = FastAPI()
@@ -22,47 +27,6 @@ Base.metadata.create_all(bind=Engine)
 
 # uvicorn main:app --reload --port 5000 --host 0.0.0.0
 # Buscar en celular ipPC:port
-
-# Models
-class User(BaseModel):
-    email: str
-    password: str
-
-class Movie(BaseModel):
-    id: Optional[int] = None
-    title: str = Field(
-        min_length=5,
-        max_length=15
-        )
-    overview: str = Field(
-        min_length=15, 
-        max_length=50
-        )
-    year: int = Field(
-        le=2022
-        )
-    rating: float = Field(
-        ge=1, 
-        le=10
-        )
-    category: str = Field(
-        min_length=5, 
-        max_length=15
-        )
-
-    #Examples
-
-    class Config:
-        schema_extra = {
-            "example" : {
-                "id": 1,
-                "title": "My Movie",
-                "overview": "Movie Description",
-                "year": 2022,
-                "rating": 9.0,
-                "category": "Accion"
-            }
-        }
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
@@ -93,33 +57,68 @@ movies = [
     }
 ]
 
+users = [
+    {
+        "email": "jose@gmail.com",
+        "password": "joseperezpassword"
+
+    },
+    {
+        "email": "juan@gmail.com",
+        "password": "juanperezpassword"
+    }
+]
+
+
+#-----------------Path Operations----------------------
 ## Home message
 @app.get(
     path="/", 
-    tags = ["home"]
+    summary="Home message",
+    tags = ["Home"]
     )
 def message():
     return HTMLResponse("<h1>Welcome FastAPI</h1>")
 
-## Login user
+#---------------------------------------
+## Users
+### Login user
 @app.post(
     path="/login", 
-    tags = ["auth"]
+    response_model=UserBase,
+    status_code=status.HTTP_200_OK,
+    summary="Login a user",
+    tags = ["Users"]
     )
 def login(
-    user: User
+    email: EmailStr = Form(...),
+    password: str = Form(...)
 ):
     if user.email == "admin@gmail.com" and user.password == "admin":
         token = create_token(user.dict())
     return JSONResponse(status_code=200, content=token)
 
-## Show all movies
+### Show all users
+@app.get(
+        path="/users",
+        response_model=List[UserBase],
+        status_code=status.HTTP_200_OK,
+        summary="Show a user",
+        tags=["Users"]
+)
+def show_all_users():
+    pass
+
+#---------------------------------------
+##Movie
+
+### Show all movies
 @app.get(
     path="/movies", 
-    tags = ["movies"], 
     response_model=List[Movie], 
     status_code=200,
-    dependencies=[Depends(JWTBearer())]
+    dependencies=[Depends(JWTBearer())],
+    tags = ["Movies"]
     )
 def get_movies() -> List[Movie]:
     return JSONResponse(status_code=200, content=movies)
@@ -127,10 +126,12 @@ def get_movies() -> List[Movie]:
 ## Show a movie
 @app.get(
     path="/movies/{id}", 
-    tags = ["movies"], 
-    response_model=Movie
+    response_model=Movie,
+    status_code=status.HTTP_200_OK,
+    summary="Show a movie",
+    tags = ["Movies"]
     )
-def filter_movies(
+def show_a_movie(
     id: int = Path(
         ge=1, 
         le=2000
@@ -144,8 +145,9 @@ def filter_movies(
 ## Show a movie by category (Query Params)
 @app.get(
     path="/movies/", 
-    tags = ["movies"], 
-    response_model=List[Movie]
+    response_model=List[Movie],
+    summary="Show a movie by category",
+    tags = ["Movies"]
     )
 def get_movies_by_category(
     category: str = Query(
@@ -159,9 +161,10 @@ def get_movies_by_category(
 ## Create movie
 @app.post(
     path="/movies", 
-    tags = ["movies"],
     response_model=dict, 
-    status_code=201
+    status_code=status.HTTP_200_OK,
+    summary="Create a movie",
+    tags = ["Movies"]
     )
 def create_movie(
     movie: Movie
@@ -172,9 +175,10 @@ def create_movie(
 ## Update movie
 @app.put(
     path="/movies/{id}", 
-    tags = ["movies"], 
     response_model=dict, 
-    status_code=200
+    status_code=status.HTTP_200_OK,
+    summary="Update a movie",
+    tags=["Movies"], 
     )
 def update_movie(
     id: int, 
@@ -186,9 +190,10 @@ def update_movie(
 ## Delete movie
 @app.delete(
     path="/movies/{id}", 
-    tags = ["movies"], 
     response_model=dict, 
-    status_code=200
+    status_code=status.HTTP_200_OK,
+    summary="Delete a movie",
+    tags=["Movies"], 
     )
 def delete_movie(
     id: int, 

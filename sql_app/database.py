@@ -7,7 +7,7 @@ from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base # Manipular todas las tablas de datos
 
 ## Nombre bd
-sqlite_name_db = "movie_db.sqlite"
+sqlite_name_db = "database_movies.sqlite"
 
 ## Leer el directorio actual de este archivo
 base_dir = os.path.dirname(os.path.realpath(__file__)) 
