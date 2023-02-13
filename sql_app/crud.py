@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 #Local Packages
 from . import models, schemas
 
+#----------------------------------------------
 #Create
-
 ##Create a User
 def create_user(db: Session, user: schemas.UserCreate):
     fake_password = user.password + "notreallyhashed"
@@ -16,7 +16,7 @@ def create_user(db: Session, user: schemas.UserCreate):
 
     return db_user
 
-def create_movie(db: Session, movie: schemas.Movie, user_id: int):
+def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
     db_movie = models.Movie(**movie.dict(), owner_id=user_id)
     db.add(db_movie)
     db.commit()
@@ -24,6 +24,6 @@ def create_movie(db: Session, movie: schemas.Movie, user_id: int):
 
     return db_movie
 
+#----------------------------------------------
 # Read
-
 ##Read a User

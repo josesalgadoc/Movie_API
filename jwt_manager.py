@@ -24,3 +24,10 @@ defcreate_token(data: dict) -> str:
                         algorithm="HS256"
                         )
     return token'''
+
+'''def login(
+    user: UserCreate
+):
+    if user.email == "admin@gmail.com" and user.password == "admin":
+        token = create_token(user.dict())
+    return JSONResponse(status_code=200, content=token)'''

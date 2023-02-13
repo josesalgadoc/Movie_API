@@ -7,27 +7,34 @@ from pydantic import BaseModel, Field
 from pydantic import EmailStr
 
 
-#Schemas
+#----------------------------------------------
+##Users
 class UserBase(BaseModel):
     email: EmailStr = Field(...)
-
+    is_active: Optional[bool] = None
 class UserCreate(UserBase):
-    user_id: UUID = Field(...)
     password: str = Field(
         ...,
         min_length=8,
         max_length=64
     )
+class User(UserBase):
+    user_id: UUID = Field(...)
 
-class Movie(BaseModel):
-    id: Optional[int] = None
+class UserShow(User, UserCreate):
+    class Config:
+        orm_mode = True
+
+#----------------------------------------------
+##Movies
+class MovieDatabase(BaseModel):
     title: str = Field(
         min_length=5,
-        max_length=15
+        max_length=50
         )
     overview: str = Field(
         min_length=15, 
-        max_length=50
+        max_length=100
         )
     year: int = Field(
         le=2022
@@ -41,15 +48,9 @@ class Movie(BaseModel):
         max_length=15
         )
     
-    #Examples
-    class Config:
-        schema_extra = {
-            "example" : {
-                "id": 1,
-                "title": "My Movie",
-                "overview": "Movie Description",
-                "year": 2022,
-                "rating": 9.0,
-                "category": "Accion"
-            }
-        }
+class MovieCreate(MovieDatabase):
+    pass
+class Movie(MovieDatabase):
+    id: Optional[int] = None
+    owner_id: int
+

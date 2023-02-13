@@ -13,28 +13,32 @@ from fastapi import status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer
 
+#SQL Alchemy
+from sqlalchemy.orm import Session
+
 #Local Modules
 from sql_app import crud
-from sql_app.schemas import UserBase, Movie
-from sql_app.database import Base, Engine, SessionLocal
-from sql_app.models import Movie as MovieModel
+from sql_app.schemas import Movie, User, UserShow, MovieCreate
+from sql_app.database import Base, engine, SessionLocal
+# from sql_app.models import Movie as MovieModel
 
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.title = "First FastAPI"
 # app.version = "0.0.1"
-Base.metadata.create_all(bind=Engine)
 
 # uvicorn main:app --reload --port 5000 --host 0.0.0.0
 # Buscar en celular ipPC:port
 
-class JWTBearer(HTTPBearer):
+'''class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
         auth = await super().__call__(request)
         data = validate_token(auth.credentials)
 
         if data["email"] != "admin@gmail.com":
-            raise HTTPException(status_code=403, detail="Invalid Credentials!")
+            raise HTTPException(status_code=403, detail="Invalid Credentials!")'''
 
 # Database
 
@@ -61,7 +65,6 @@ users = [
     {
         "email": "jose@gmail.com",
         "password": "joseperezpassword"
-
     },
     {
         "email": "juan@gmail.com",
@@ -69,6 +72,13 @@ users = [
     }
 ]
 
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 #-----------------Path Operations----------------------
 ## Home message
@@ -85,64 +95,106 @@ def message():
 ### Login user
 @app.post(
     path="/login", 
-    response_model=UserBase,
+    response_model=User,
     status_code=status.HTTP_200_OK,
     summary="Login a user",
     tags = ["Users"]
     )
 def login(
     email: EmailStr = Form(...),
-    password: str = Form(...)
+    password: str = Form(...),
+    # db: Session = Depends(get_db())
 ):
-    if user.email == "admin@gmail.com" and user.password == "admin":
-        token = create_token(user.dict())
-    return JSONResponse(status_code=200, content=token)
+    pass
+    # for user in users:
+    #     if user["email"] == email and user["password"] == password:
+    #         return user
+    # return JSONResponse(content={email :"Email or password incorrect!"})
+        
+
+### Create a user
+@app.post(
+        path="/users",
+        response_model=User,
+        status_code=status.HTTP_201_CREATED,
+        summary="Create a user",
+        tags=["Users"]
+    )
+def create_a_user(
+    user: UserShow, 
+    db: Session = Depends(get_db)
+):
+    users.append(user)
+    crud.create_user(db=db, user=user)
+    return user
+
 
 ### Show all users
 @app.get(
         path="/users",
-        response_model=List[UserBase],
+        response_model=List[User],
         status_code=status.HTTP_200_OK,
-        summary="Show a user",
+        summary="Show users",
         tags=["Users"]
 )
-def show_all_users():
-    pass
+def get_users(
+    # db: Session = Depends(get_db())
+):
+    return JSONResponse(status_code=200, content=users)
 
 #---------------------------------------
 ##Movie
+
+## Create movie
+@app.post(
+    path="/movies/{user_id}", 
+    response_model=Movie, 
+    status_code=status.HTTP_200_OK,
+    summary="Create a movie for user",
+    tags = ["Movies"]
+    )
+def create_movie_for_user(
+    user_id: int,
+    movie: MovieCreate,
+    db: Session = Depends(get_db)
+):
+    crud.create_user_movie(db=db, movie=movie, user_id=user_id)
+    movies.append(movie)
+    return JSONResponse(status_code=201, content={"Message": "Movie registered successfully!"})
 
 ### Show all movies
 @app.get(
     path="/movies", 
     response_model=List[Movie], 
     status_code=200,
-    dependencies=[Depends(JWTBearer())],
+    # dependencies=[Depends(JWTBearer())],
     tags = ["Movies"]
     )
-def get_movies() -> List[Movie]:
-    return JSONResponse(status_code=200, content=movies)
+def get_movies(
+    # db: Session = Depends(get_db())
+) -> List[Movie]:
+    return movies
 
-## Show a movie
+### Show a movie
 @app.get(
     path="/movies/{id}", 
     response_model=Movie,
     status_code=status.HTTP_200_OK,
-    summary="Show a movie",
+    summary="Get a movie",
     tags = ["Movies"]
     )
-def show_a_movie(
+def get_a_movie(
     id: int = Path(
         ge=1, 
-        le=2000
-        )
+        le=200
+    )
 ) -> Movie:
     for item in movies:
         if item["id"] == id:
-            return JSONResponse(content=item)
+            return item
     return JSONResponse(status_code=404, content=[])
             
-## Show a movie by category (Query Params)
+### Show a movie by category (Query Params)
 @app.get(
     path="/movies/", 
     response_model=List[Movie],
@@ -153,26 +205,13 @@ def get_movies_by_category(
     category: str = Query(
         min_length=5, 
         max_length=15
-        )
+        ),
+    # db: Session = Depends(get_db())
 ) -> List[Movie]:
     data = list(filter(lambda item: item["category"] == category, movies))
     return JSONResponse(content=data)
 
-## Create movie
-@app.post(
-    path="/movies", 
-    response_model=dict, 
-    status_code=status.HTTP_200_OK,
-    summary="Create a movie",
-    tags = ["Movies"]
-    )
-def create_movie(
-    movie: Movie
-) -> dict:
-    movies.append(movie)
-    return JSONResponse(status_code=201, content={"Message": "Movie registered successfully!"})
-
-## Update movie
+### Update movie
 @app.put(
     path="/movies/{id}", 
     response_model=dict, 
@@ -182,12 +221,13 @@ def create_movie(
     )
 def update_movie(
     id: int, 
-    movie: Movie
+    movie: Movie,
+    # db: Session = Depends(get_db())
 ) -> dict:
     [movies[index].update(movie) for index, item in enumerate(movies) if item["id"] == id]
     return JSONResponse(status_code=200, content={"Message": "Movie updated successfully!"})
 
-## Delete movie
+### Delete movie
 @app.delete(
     path="/movies/{id}", 
     response_model=dict, 
@@ -197,7 +237,8 @@ def update_movie(
     )
 def delete_movie(
     id: int, 
-    movie: Movie
+    movie: Movie,
+    # db: Session = Depends(get_db())
 ) -> dict:
     [movies.remove(item) for item in movies if item["id"] == id]
     return JSONResponse(status_code=200, content={"Message": "Movie deleted successfully!"})

@@ -16,10 +16,10 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(base_dir, sqlite_name_db)}" # Las tres barras es el como se conecta a una base de datos sqlite
 
 ## Motor de la base de datos
-Engine = create_engine(url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
+engine = create_engine(url=SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}, echo=True)
 
 ## Crear sesión para conectarse a la db
-SessionLocal = sessionmaker(bind=Engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 ## Instancia para manipular tabla de datos
 Base = declarative_base()
