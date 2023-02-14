@@ -127,8 +127,12 @@ def create_a_user(
     db: Session = Depends(get_db)
 ):
     users.append(user)
-    crud.create_user(db=db, user=user)
-    return user
+    db_user = crud.get_user_by_email(db=db, email=user.email)
+
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = crud.create_user(db=db, user=user)
+    return jsonable_encoder(user)
 
 ### Get all users
 @app.get(
@@ -151,7 +155,7 @@ def get_users(
         path="/users/{user_id}",
         response_model=User, 
         status_code=status.HTTP_200_OK,
-        summary="Get Suser by id",
+        summary="Get User by id",
         tags=["Users"]
     )
 def get_user_by_id(
@@ -159,6 +163,9 @@ def get_user_by_id(
     db: Session = Depends(get_db)
 ):
     user = crud.get_user_by_id(db=db, user_id=user_id)
+
+    if user is None:
+        raise HTTPException(status_code=404, detail="User doesn't have a movie")
     return jsonable_encoder(user)
 
 #---------------------------------------
@@ -181,7 +188,7 @@ def create_movie_for_user(
     movies.append(movie)
     return JSONResponse(status_code=201, content={"Message": "Movie registered successfully!"})
 
-### Show all movies
+### Get all movies
 @app.get(
     path="/movies", 
     response_model=List[Movie], 
@@ -191,28 +198,36 @@ def create_movie_for_user(
     tags = ["Movies"]
     )
 def get_movies(
-    # db: Session = Depends(get_db())
-) -> List[Movie]:
-    return movies
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    movies = crud.get_movies(db=db, skip=skip, limit=limit)
+    
+    if movies is None:
+        raise HTTPException(status_code=404, detail="Dont exist movies")
+    return jsonable_encoder(movies)
 
-### Show a movie
+### Get a movie by user
 @app.get(
-    path="/movies/{id}", 
+    path="/movies/{user_id}", 
     response_model=Movie,
     status_code=status.HTTP_200_OK,
-    summary="Get a movie",
+    summary="Get movie by User",
     tags = ["Movies"]
     )
-def get_a_movie(
-    id: int = Path(
+def get_movie_by_user(
+    user_id: int = Path(
         ge=1, 
         le=200
-    )
-) -> Movie:
-    for item in movies:
-        if item["id"] == id:
-            return item
-    return JSONResponse(status_code=404, content=[])
+    ),
+    db: Session = Depends(get_db)
+):
+    movie = crud.get_movie_by_user(db=db, user_id=user_id)
+    
+    if movie is None:
+        raise HTTPException(status_code=404, detail="Movie not found")
+    return JSONResponse(status_code=200, content=jsonable_encoder(movie))
             
 ### Show a movie by category (Query Params)
 @app.get(

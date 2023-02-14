@@ -11,20 +11,14 @@ from pydantic import EmailStr
 ##Users
 class UserBase(BaseModel):
     email: EmailStr = Field(...)
-    is_active: Optional[bool] = True
+    is_active: Optional[bool] = None
 class UserCreate(UserBase):
     password: str = Field(
         ...,
         min_length=8,
         max_length=64
     )
-class User(UserBase):
-    pass
-    # user_id: UUID = Field(...)
 
-class UserShow(User, UserCreate):
-    class Config:
-        orm_mode = True
 
 #----------------------------------------------
 ##Movies
@@ -55,3 +49,9 @@ class Movie(MovieDatabase):
     id: Optional[int] = None
     owner_id: int
 
+class User(UserBase):
+    pass
+    # user_id: UUID = Field(...)
+class UserShow(User, UserCreate):
+    class Config:
+        orm_mode = True

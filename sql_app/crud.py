@@ -1,3 +1,6 @@
+#Pydantic
+from pydantic import EmailStr
+
 #SQL Alchemy
 from sqlalchemy.orm import Session
 
@@ -5,8 +8,9 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 
 #----------------------------------------------
-#Create
-##Create a User
+## Users
+
+### Create a User
 def create_user(db: Session, user: schemas.UserCreate):
     fake_password = user.password + "notreallyhashed"
     db_user = models.User(email=user.email, password=fake_password)
@@ -16,6 +20,22 @@ def create_user(db: Session, user: schemas.UserCreate):
 
     return db_user
 
+### Get all users
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.User).offset(skip).limit(limit).all()
+
+### Get user by id
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+### Get user by email
+def get_user_by_email(db: Session, email: EmailStr):
+    return db.query(models.User).filter(models.User.email == email).first()
+
+#----------------------------------------------
+## Movies
+
+### Create a Movie
 def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
     db_movie = models.Movie(**movie.dict(), owner_id=user_id)
     db.add(db_movie)
@@ -24,11 +44,17 @@ def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
 
     return db_movie
 
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.User).offset(skip).limit(limit).all()
+### Get all movies
+def get_movies(db: Session, skip: int = 0, limit: int = 100):
+   return db.query(models.Movie).offset(skip).limit(limit).all()
 
-def get_user_by_id(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+### Get movie by user
+def get_movie_by_user(db: Session, user_id: int):
+    return db.query(models.Movie).filter(models.Movie.owner_id == user_id).first()
+
+### Get movie by category
+
+
 
 
 #----------------------------------------------
