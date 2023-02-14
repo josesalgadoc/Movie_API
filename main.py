@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi import Body, Form, Path, Query, Request, HTTPException, Depends
 from fastapi import status
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi.security import HTTPBearer
 
 #SQL Alchemy
@@ -92,6 +93,7 @@ def message():
 
 #---------------------------------------
 ## Users
+
 ### Login user
 @app.post(
     path="/login", 
@@ -128,19 +130,36 @@ def create_a_user(
     crud.create_user(db=db, user=user)
     return user
 
-
-### Show all users
+### Get all users
 @app.get(
         path="/users",
         response_model=List[User],
         status_code=status.HTTP_200_OK,
-        summary="Show users",
+        summary="Get all users",
         tags=["Users"]
-)
+    )
 def get_users(
-    # db: Session = Depends(get_db())
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
 ):
-    return JSONResponse(status_code=200, content=users)
+    users = crud.get_users(db=db, skip=skip, limit=limit)
+    return JSONResponse(status_code=200, content=jsonable_encoder(users))
+
+### Get a user by id
+@app.get(
+        path="/users/{user_id}",
+        response_model=User, 
+        status_code=status.HTTP_200_OK,
+        summary="Get Suser by id",
+        tags=["Users"]
+    )
+def get_user_by_id(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    user = crud.get_user_by_id(db=db, user_id=user_id)
+    return jsonable_encoder(user)
 
 #---------------------------------------
 ##Movie
@@ -167,6 +186,7 @@ def create_movie_for_user(
     path="/movies", 
     response_model=List[Movie], 
     status_code=200,
+    summary="Get all movies",
     # dependencies=[Depends(JWTBearer())],
     tags = ["Movies"]
     )

@@ -24,6 +24,13 @@ def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
 
     return db_movie
 
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.User).offset(skip).limit(limit).all()
+
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+
 #----------------------------------------------
 # Read
 ##Read a User

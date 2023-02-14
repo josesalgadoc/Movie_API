@@ -11,7 +11,7 @@ from pydantic import EmailStr
 ##Users
 class UserBase(BaseModel):
     email: EmailStr = Field(...)
-    is_active: Optional[bool] = None
+    is_active: Optional[bool] = True
 class UserCreate(UserBase):
     password: str = Field(
         ...,
@@ -19,7 +19,8 @@ class UserCreate(UserBase):
         max_length=64
     )
 class User(UserBase):
-    user_id: UUID = Field(...)
+    pass
+    # user_id: UUID = Field(...)
 
 class UserShow(User, UserCreate):
     class Config:
