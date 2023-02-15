@@ -46,17 +46,13 @@ def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
 
 ### Get all movies
 def get_movies(db: Session, skip: int = 0, limit: int = 100):
-   return db.query(models.Movie).offset(skip).limit(limit).all()
+    return db.query(models.Movie).offset(skip).limit(limit).all()
 
 ### Get movie by user
 def get_movie_by_user(db: Session, user_id: int):
     return db.query(models.Movie).filter(models.Movie.owner_id == user_id).first()
 
 ### Get movie by category
+def get_movie_by_category(db: Session, category: str, skip: int = 0, limit: int = 100):
+    return db.query(models.Movie).filter(models.Movie.category == category).offset(skip).limit(limit).all()
 
-
-
-
-#----------------------------------------------
-# Read
-##Read a User

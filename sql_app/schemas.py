@@ -1,28 +1,12 @@
 #Python 
 from typing import Optional
-from uuid import UUID
 
 #Pydantic
-from pydantic import BaseModel, Field
-from pydantic import EmailStr
-
-
-#----------------------------------------------
-##Users
-class UserBase(BaseModel):
-    email: EmailStr = Field(...)
-    is_active: Optional[bool] = None
-class UserCreate(UserBase):
-    password: str = Field(
-        ...,
-        min_length=8,
-        max_length=64
-    )
-
+from pydantic import BaseModel, Field, EmailStr
 
 #----------------------------------------------
 ##Movies
-class MovieDatabase(BaseModel):
+class MovieBase(BaseModel):
     title: str = Field(
         min_length=5,
         max_length=50
@@ -42,16 +26,26 @@ class MovieDatabase(BaseModel):
         min_length=5, 
         max_length=15
         )
-    
-class MovieCreate(MovieDatabase):
+class MovieCreate(MovieBase):
     pass
-class Movie(MovieDatabase):
+class Movie(MovieBase):
     id: Optional[int] = None
     owner_id: int
+    class Config:
+        orm_mode = True
 
+#----------------------------------------------
+##Users
+class UserBase(BaseModel):
+    email: EmailStr = Field(...)
+class UserCreate(UserBase):
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=64
+    )
 class User(UserBase):
-    pass
-    # user_id: UUID = Field(...)
-class UserShow(User, UserCreate):
+    id: int
+    is_active: Optional[bool] = None
     class Config:
         orm_mode = True
