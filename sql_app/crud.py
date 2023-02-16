@@ -17,7 +17,6 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-
     return db_user
 
 ### Get all users
@@ -41,7 +40,6 @@ def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
     db.add(db_movie)
     db.commit()
     db.refresh(db_movie)
-
     return db_movie
 
 ### Get all movies
@@ -56,3 +54,13 @@ def get_movie_by_user(db: Session, user_id: int):
 def get_movie_by_category(db: Session, category: str, skip: int = 0, limit: int = 100):
     return db.query(models.Movie).filter(models.Movie.category == category).offset(skip).limit(limit).all()
 
+# def update_movie(db: Session, user_id: int, limit: int = 1):
+#     return db.query(models.Movie)
+
+### Get movie by movie_id
+def get_movie_by_movie_id(db: Session, movie_id: int, limit: int = 1):
+    db_movie = db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
+    db.delete(db_movie)
+    db.commit()
+    # db.refresh(db_movie)
+    return db_movie

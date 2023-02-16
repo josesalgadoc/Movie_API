@@ -248,7 +248,7 @@ def get_movies_by_category(
 
 ### Update movie
 @app.put(
-    path="/movies/{id}", 
+    path="/movies/update/{id}", 
     response_model=dict, 
     status_code=status.HTTP_200_OK,
     summary="Update a movie",
@@ -257,24 +257,30 @@ def get_movies_by_category(
 def update_movie(
     id: int, 
     movie: schemas.Movie,
-    # db: Session = Depends(get_db())
+    # db: Session = Depends(get_db)
 ):
     [movies[index].update(movie) for index, item in enumerate(movies) if item["id"] == id]
     return JSONResponse(status_code=200, content={"Message": "Movie updated successfully!"})
 
 ### Delete movie
 @app.delete(
-    path="/movies/{id}", 
+    path="/movies/delete/{id}", 
     response_model=dict, 
     status_code=status.HTTP_200_OK,
     summary="Delete a movie",
     tags=["Movies"], 
     )
 def delete_movie(
-    id: int, 
-    movie: schemas.Movie,
-    # db: Session = Depends(get_db())
+    movie_id: int, 
+    limit: int = 1,
+    # movie: schemas.Movie,
+    db: Session = Depends(get_db)
 ):
-    [movies.remove(item) for item in movies if item["id"] == id]
+    # [movies.remove(item) for item in movies if item["id"] == id]
+    db_movie = crud.get_movie_by_movie_id(db=db, movie_id=movie_id, limit=limit)
+
+    if db_movie is None:
+        raise HTTPException(status_code=404, detail="Movie not found")
     return JSONResponse(status_code=200, content={"Message": "Movie deleted successfully!"})
+
 
