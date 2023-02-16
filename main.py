@@ -225,7 +225,7 @@ def get_movie_by_user(
             
 ### Show a movie by category
 @app.get(
-    path="/movies", 
+    path="/movies/", 
     response_model=List[schemas.Movie],
     status_code=status.HTTP_200_OK,
     summary="Get movie by category",
