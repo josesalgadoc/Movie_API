@@ -162,6 +162,26 @@ def get_user_by_id(
         raise HTTPException(status_code=404, detail="User doesn't have a movie")
     return jsonable_encoder(user)
 
+### Delete user by email
+@app.delete(
+        path="/users/delete",
+        response_model=dict,
+        status_code=status.HTTP_200_OK, 
+        summary="Delete a user by email", 
+        tags=["Users"]
+)
+def delete_user_by_email(
+    email: EmailStr,
+    db: Session = Depends(get_db)
+):
+    db_user = crud.get_user_by_email(db=db, email=email)
+
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(db_user)
+    db.commit()
+    return JSONResponse(status_code=200, content={"Message": "User deteled successfully!"})
+
 #---------------------------------------
 ##Movie
 
@@ -264,7 +284,7 @@ def update_movie(
 
 ### Delete movie
 @app.delete(
-    path="/movies/delete/{id}", 
+    path="/movies/delete/{movie_id}", 
     response_model=dict, 
     status_code=status.HTTP_200_OK,
     summary="Delete a movie",
@@ -276,11 +296,12 @@ def delete_movie(
     # movie: schemas.Movie,
     db: Session = Depends(get_db)
 ):
-    # [movies.remove(item) for item in movies if item["id"] == id]
     db_movie = crud.get_movie_by_movie_id(db=db, movie_id=movie_id, limit=limit)
 
     if db_movie is None:
         raise HTTPException(status_code=404, detail="Movie not found")
+    db.delete(db_movie)
+    db.commit()
     return JSONResponse(status_code=200, content={"Message": "Movie deleted successfully!"})
 
 

@@ -31,6 +31,7 @@ def get_user_by_id(db: Session, user_id: int):
 def get_user_by_email(db: Session, email: EmailStr):
     return db.query(models.User).filter(models.User.email == email).first()
 
+
 #----------------------------------------------
 ## Movies
 
@@ -48,19 +49,16 @@ def get_movies(db: Session, skip: int = 0, limit: int = 100):
 
 ### Get movie by user
 def get_movie_by_user(db: Session, user_id: int):
-    return db.query(models.Movie).filter(models.Movie.owner_id == user_id).first()
+    return db.query(models.Movie).filter(models.Movie.owner_id == user_id).all()
 
 ### Get movie by category
 def get_movie_by_category(db: Session, category: str, skip: int = 0, limit: int = 100):
     return db.query(models.Movie).filter(models.Movie.category == category).offset(skip).limit(limit).all()
 
-# def update_movie(db: Session, user_id: int, limit: int = 1):
-#     return db.query(models.Movie)
-
 ### Get movie by movie_id
 def get_movie_by_movie_id(db: Session, movie_id: int, limit: int = 1):
-    db_movie = db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
-    db.delete(db_movie)
-    db.commit()
-    # db.refresh(db_movie)
-    return db_movie
+    return db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
+
+### Update movie
+# def update_movie(db: Session, user_id: int, limit: int = 1):
+#     return db.query(models.Movie)

@@ -28,3 +28,4 @@ class Movie(Base):
 
     owner = relationship("User", back_populates="movies")
 
+# UPDATE "sqlite_sequence" SET "seq" = 0 WHERE "name" = "table_name"
