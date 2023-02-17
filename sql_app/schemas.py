@@ -49,3 +49,4 @@ class User(UserBase):
     is_active: Optional[bool] = None
     class Config:
         orm_mode = True
+

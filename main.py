@@ -182,6 +182,7 @@ def delete_user_by_email(
     db.commit()
     return JSONResponse(status_code=200, content={"Message": "User deteled successfully!"})
 
+
 #---------------------------------------
 ##Movie
 
@@ -199,7 +200,6 @@ def create_movie_for_user(
     db: Session = Depends(get_db)
 ):
     crud.create_user_movie(db=db, movie=movie, user_id=user_id)
-    # movies.append(movie)
     return JSONResponse(status_code=201, content={"Message": "Movie registered successfully!"})
 
 ### Get all movies
@@ -268,18 +268,29 @@ def get_movies_by_category(
 
 ### Update movie
 @app.put(
-    path="/movies/update/{id}", 
+    path="/movies/update/{movie_id}", 
     response_model=dict, 
     status_code=status.HTTP_200_OK,
     summary="Update a movie",
     tags=["Movies"], 
     )
 def update_movie(
-    id: int, 
+    movie_id: int, 
     movie: schemas.Movie,
-    # db: Session = Depends(get_db)
+    db: Session = Depends(get_db)
 ):
-    [movies[index].update(movie) for index, item in enumerate(movies) if item["id"] == id]
+    db_movie = crud.get_movie_by_movie_id(db=db, movie_id=movie_id)
+
+    if db_movie is None:
+        raise HTTPException(status_code=404, detail="Movie not found")
+    
+    db_movie.title = movie.title
+    db_movie.overview = movie.overview
+    db_movie.year = movie.year
+    db_movie.rating = movie.rating
+    db_movie.category = movie.category
+
+    db.commit()
     return JSONResponse(status_code=200, content={"Message": "Movie updated successfully!"})
 
 ### Delete movie
