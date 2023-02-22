@@ -1,9 +1,9 @@
 #Pydantic
 from pydantic import EmailStr
-
+#FastAPI
+from fastapi import HTTPException
 #SQL Alchemy
 from sqlalchemy.orm import Session
-
 #Local Packages
 from . import models, schemas
 
@@ -14,28 +14,40 @@ class UserRequests():
     def __init__(self, db: Session):
         self.db = db
 
+    ### Get user by email
+    def get_user_by_email(self, email: EmailStr):
+        return self.db.query(models.User).filter(models.User.email == email).first()
+
     ### Get all users
     def get_users(self, skip: int = 0, limit: int = 100):
         return self.db.query(models.User).offset(skip).limit(limit).all()
 
+    ### Get user by id
+    def get_user_by_id(self, user_id: int):
+        return self.db.query(models.User).filter(models.User.id == user_id).first()
 
-### Create a User
-def create_user(db: Session, user: schemas.UserCreate):
-    fake_password = user.password + "notreallyhashed"
-    db_user = models.User(email=user.email, password=fake_password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    ### Create a User
+    def create_user(self, user: schemas.UserCreate):
+        db_user = self.get_user_by_email(email=user.email)
+        if db_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-### Get user by id
-def get_user_by_id(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
-
-### Get user by email
-def get_user_by_email(db: Session, email: EmailStr):
-    return db.query(models.User).filter(models.User.email == email).first()
-
+        fake_password = user.password + "notreallyhashed"
+        db_user = models.User(email=user.email, password=fake_password)
+        self.db.add(db_user)
+        self.db.commit()
+        self.db.refresh(db_user)
+        return db_user
+    
+    ### Delete user
+    def delete_user(self, email: EmailStr):
+        db_user = self.get_user_by_email(email=email)
+        if db_user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        self.db.delete(db_user)
+        self.db.commit()
+        return
 
 #----------------------------------------------
 ## Movies

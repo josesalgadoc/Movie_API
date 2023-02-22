@@ -1,20 +1,16 @@
 #Python
 from typing import List # Para especificar un campo opcional en el esquema BaseModel
 # from jwt_manager import create_token, validate_token
-
 #Pydantic
 from pydantic import EmailStr
-
 #FastAPI
 from fastapi import FastAPI
-from fastapi import Depends, Form, HTTPException, Path, Query, status
+from fastapi import Depends, HTTPException, Path, Query, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 # from fastapi.security import HTTPBearer
-
 #SQL Alchemy
 from sqlalchemy.orm import Session
-
 #Local Modules
 from sql_app import crud, database, schemas
 from routers import users
@@ -53,7 +49,7 @@ def message():
 #---------------------------------------
 ## Users
 
-### Login user
+""" ### Login user
 @app.post(
     path="/login", 
     response_model=schemas.User,
@@ -70,10 +66,9 @@ def login(
     # for user in users:
     #     if user["email"] == email and user["password"] == password:
     #         return user
-    # return JSONResponse(content={email :"Email or password incorrect!"})
-        
+    # return JSONResponse(content={email :"Email or password incorrect!"}) """
 
-### Create a user
+""" ### Create a user
 @app.post(
         path="/users",
         response_model=schemas.User,
@@ -91,26 +86,11 @@ def create_a_user(
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     user = crud.create_user(db=db, user=user)
-    return jsonable_encoder(user)
+    return jsonable_encoder(user) """
 
 ### Get all users
-app.include_router(users.router)
-'''@app.get(
-        path="/users",
-        response_model=List[schemas.User],
-        status_code=status.HTTP_200_OK,
-        summary="Get all users",
-        tags=["Users"]
-    )
-def get_users(
-    skip: int = 0,
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    users = crud.get_users(db=db, skip=skip, limit=limit)
-    return JSONResponse(status_code=200, content=jsonable_encoder(users))'''
 
-### Get a user by id
+""" ### Get a user by id
 @app.get(
         path="/users/{user_id}",
         response_model=schemas.User, 
@@ -126,9 +106,9 @@ def get_user_by_id(
 
     if user is None:
         raise HTTPException(status_code=404, detail="User doesn't have a movie")
-    return jsonable_encoder(user)
+    return jsonable_encoder(user) """
 
-### Delete user by email
+""" ### Delete user by email
 @app.delete(
         path="/users/delete",
         response_model=dict,
@@ -146,8 +126,9 @@ def delete_user_by_email(
         raise HTTPException(status_code=404, detail="User not found")
     db.delete(db_user)
     db.commit()
-    return JSONResponse(status_code=200, content={"Message": "User deteled successfully!"})
+    return JSONResponse(status_code=200, content={"Message": "User deteled successfully!"}) """
 
+app.include_router(users.router)
 
 #---------------------------------------
 ##Movie
