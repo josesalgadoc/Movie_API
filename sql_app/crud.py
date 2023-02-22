@@ -56,6 +56,6 @@ def get_movie_by_category(db: Session, category: str, skip: int = 0, limit: int 
     return db.query(models.Movie).filter(models.Movie.category == category).offset(skip).limit(limit).all()
 
 ### Get movie by movie_id
-def get_movie_by_movie_id(db: Session, movie_id: int):
-    return db.query(models.Movie).filter(models.Movie.id == movie_id).first()
+def get_movie_by_movie_id(db: Session, movie_id: int, limit: int):
+    return db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
 

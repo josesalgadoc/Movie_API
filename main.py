@@ -1,7 +1,6 @@
 #Python
 from typing import List # Para especificar un campo opcional en el esquema BaseModel
 # from jwt_manager import create_token, validate_token
-# from uuid import UUID
 
 #Pydantic
 from pydantic import EmailStr
@@ -18,14 +17,15 @@ from sqlalchemy.orm import Session
 
 #Local Modules
 from sql_app import crud, database, schemas
-
+from middlewares import error_handler
 
 database.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI()
-app.title = "First FastAPI"
+app.title = "MovieAPI"
 # app.version = "0.0.1"
 
+app.add_middleware(error_handler.ErrorHandler)
 # uvicorn main:app --reload --port 5000 --host 0.0.0.0
 # Buscar en celular ipPC:port
 
@@ -37,35 +37,6 @@ app.title = "First FastAPI"
         if data["email"] != "admin@gmail.com":
             raise HTTPException(status_code=403, detail="Invalid Credentials!")'''
 
-movies = [
-    {
-        "id": 1,
-        "title": "Avatar",
-        "overview": "En un raro e único planeta llamado Pandora, habitado por ...",
-        "year": "2009",
-        "rating": 8.0,
-        "category": "Accion"
-    },
-    {
-        "id": 2,
-        "title": "Ant-Man",
-        "overview": "Scott Lang, un ladrón de casas, luego de salir de ...",
-        "year": "2019",
-        "rating": 8.5,
-        "category": "Heroes"
-    }
-]
-
-users = [
-    {
-        "email": "jose@gmail.com",
-        "password": "joseperezpassword"
-    },
-    {
-        "email": "juan@gmail.com",
-        "password": "juanperezpassword"
-    }
-]
 
 # Dependency database
 def get_db():
@@ -83,7 +54,7 @@ def get_db():
     tags = ["Home"]
     )
 def message():
-    return HTMLResponse("<h1>Welcome FastAPI</h1>")
+    return HTMLResponse("<h1>Movie API</h1>")
 
 #---------------------------------------
 ## Users
@@ -99,7 +70,7 @@ def message():
 def login(
     email: EmailStr = Form(...),
     password: str = Form(...),
-    # db: Session = Depends(get_db())
+    # db: Session = Depends(get_db)
 ):
     pass
     # for user in users:
@@ -222,7 +193,7 @@ def get_movies(
         raise HTTPException(status_code=404, detail="Dont exist movies")
     return jsonable_encoder(movies)
 
-### Get a movie by user
+### Get a movie by user_id
 @app.get(
     path="/movies/{user_id}", 
     response_model=schemas.Movie,
@@ -304,7 +275,6 @@ def update_movie(
 def delete_movie(
     movie_id: int, 
     limit: int = 1,
-    # movie: schemas.Movie,
     db: Session = Depends(get_db)
 ):
     db_movie = crud.get_movie_by_movie_id(db=db, movie_id=movie_id, limit=limit)
