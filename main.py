@@ -17,6 +17,8 @@ from sqlalchemy.orm import Session
 
 #Local Modules
 from sql_app import crud, database, schemas
+from routers import users
+from dependencies import get_db
 from middlewares import error_handler
 
 database.Base.metadata.create_all(bind=database.engine)
@@ -37,14 +39,6 @@ app.add_middleware(error_handler.ErrorHandler)
         if data["email"] != "admin@gmail.com":
             raise HTTPException(status_code=403, detail="Invalid Credentials!")'''
 
-
-# Dependency database
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 #-----------------Path Operations----------------------
 ## Home message
@@ -100,7 +94,8 @@ def create_a_user(
     return jsonable_encoder(user)
 
 ### Get all users
-@app.get(
+app.include_router(users.router)
+'''@app.get(
         path="/users",
         response_model=List[schemas.User],
         status_code=status.HTTP_200_OK,
@@ -113,7 +108,7 @@ def get_users(
     db: Session = Depends(get_db)
 ):
     users = crud.get_users(db=db, skip=skip, limit=limit)
-    return JSONResponse(status_code=200, content=jsonable_encoder(users))
+    return JSONResponse(status_code=200, content=jsonable_encoder(users))'''
 
 ### Get a user by id
 @app.get(
@@ -238,31 +233,31 @@ def get_movies_by_category(
     return JSONResponse(status_code=200, content=jsonable_encoder(movies))
 
 ### Update movie
-@app.put(
-    path="/movies/update/{movie_id}", 
-    response_model=dict, 
-    status_code=status.HTTP_200_OK,
-    summary="Update a movie",
-    tags=["Movies"], 
-    )
-def update_movie(
-    movie_id: int, 
-    movie: schemas.Movie,
-    db: Session = Depends(get_db)
-):
-    db_movie = crud.get_movie_by_movie_id(db=db, movie_id=movie_id)
+# @app.put(
+#     path="/movies/update/{movie_id}", 
+#     response_model=dict, 
+#     status_code=status.HTTP_200_OK,
+#     summary="Update a movie",
+#     tags=["Movies"], 
+#     )
+# def update_movie(
+#     movie_id: int, 
+#     movie: schemas.Movie,
+#     db: Session = Depends(get_db)
+# ):
+#     db_movie = crud.get_movie_by_movie_id(db=db, movie_id=movie_id)
 
-    if db_movie is None:
-        raise HTTPException(status_code=404, detail="Movie not found")
+#     if db_movie is None:
+#         raise HTTPException(status_code=404, detail="Movie not found")
     
-    db_movie.title = movie.title
-    db_movie.overview = movie.overview
-    db_movie.year = movie.year
-    db_movie.rating = movie.rating
-    db_movie.category = movie.category
+#     db_movie.title = movie.title
+#     db_movie.overview = movie.overview
+#     db_movie.year = movie.year
+#     db_movie.rating = movie.rating
+#     db_movie.category = movie.category
 
-    db.commit()
-    return JSONResponse(status_code=200, content={"Message": "Movie updated successfully!"})
+#     db.commit()
+#     return JSONResponse(status_code=200, content={"Message": "Movie updated successfully!"})
 
 ### Delete movie
 @app.delete(

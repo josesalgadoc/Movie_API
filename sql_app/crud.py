@@ -10,6 +10,15 @@ from . import models, schemas
 #----------------------------------------------
 ## Users
 
+class UserRequests():
+    def __init__(self, db: Session):
+        self.db = db
+
+    ### Get all users
+    def get_users(self, skip: int = 0, limit: int = 100):
+        return self.db.query(models.User).offset(skip).limit(limit).all()
+
+
 ### Create a User
 def create_user(db: Session, user: schemas.UserCreate):
     fake_password = user.password + "notreallyhashed"
@@ -18,10 +27,6 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
-
-### Get all users
-def get_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.User).offset(skip).limit(limit).all()
 
 ### Get user by id
 def get_user_by_id(db: Session, user_id: int):
@@ -59,3 +64,15 @@ def get_movie_by_category(db: Session, category: str, skip: int = 0, limit: int 
 def get_movie_by_movie_id(db: Session, movie_id: int, limit: int):
     return db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
 
+# ### Update movie
+# def update_movie(db: Session, movie_id: int, limit: int, movie: schemas.Movie):
+#     db_movie = get_movie_by_movie_id(db=db, movie_id=movie_id, limit=limit)
+
+#     db_movie.title = movie.title
+#     db_movie.overview = movie.overview
+#     db_movie.year = movie.year
+#     db_movie.rating = movie.rating
+#     db_movie.category = movie.category
+
+#     db.commit()
+#     return
