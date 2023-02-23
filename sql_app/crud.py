@@ -1,15 +1,17 @@
-#Pydantic
+# Pydantic
 from pydantic import EmailStr
-#FastAPI
+
+# FastAPI
 from fastapi import HTTPException
-#SQL Alchemy
+
+# SQL Alchemy
 from sqlalchemy.orm import Session
-#Local Packages
+
+# Local Packages
 from . import models, schemas
 
 #----------------------------------------------
 ## Users
-
 class UserRequests():
     def __init__(self, db: Session):
         self.db = db
@@ -38,7 +40,7 @@ class UserRequests():
         self.db.commit()
         self.db.refresh(db_user)
         return db_user
-    
+
     ### Delete user
     def delete_user(self, email: EmailStr):
         db_user = self.get_user_by_email(email=email)
@@ -51,40 +53,56 @@ class UserRequests():
 
 #----------------------------------------------
 ## Movies
+class MovieRequests():
+    def __init__(self, db: Session):
+        self.db = db
 
-### Create a Movie
-def create_user_movie(db: Session, movie: schemas.MovieCreate, user_id: int):
-    db_movie = models.Movie(**movie.dict(), owner_id=user_id)
-    db.add(db_movie)
-    db.commit()
-    db.refresh(db_movie)
-    return db_movie
+    ### Get movie by user
+    def get_movie_by_user(self, user_id: int):
+        return self.db.query(models.Movie).filter(models.Movie.owner_id == user_id).all()
+    
+    ### Get all movies
+    def get_movies(self, skip: int = 0, limit: int = 100):
+        return self.db.query(models.Movie).offset(skip).limit(limit).all()
+    
+    ### Get movie by category
+    def get_movie_by_category(self, category: str, skip: int = 0, limit: int = 100):
+        return self.db.query(models.Movie).filter(models.Movie.category == category).offset(skip).limit(limit).all()
+    
+    ### Get movie by movie_id
+    def get_movie_by_movie_id(self, movie_id: int, limit: int):
+        return self.db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
 
-### Get all movies
-def get_movies(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Movie).offset(skip).limit(limit).all()
+    ### Create a Movie
+    def create_user_movie(self, movie: schemas.MovieCreate, user_id: int):
+        db_movie = models.Movie(**movie.dict(), owner_id=user_id)
+        self.db.add(db_movie)
+        self.db.commit()
+        self.db.refresh(db_movie)
+        return db_movie
+    
+    ### Delete a Movie by movie_id
+    def delete_movie_by_movie_id(self, movie_id: int, limit: int):
+        db_movie = self.get_movie_by_movie_id(movie_id=movie_id, limit=limit)
+        if db_movie is None:
+            raise HTTPException(status_code=404, detail="Movie not found")
+        
+        self.db.delete(db_movie)
+        self.db.commit()
+        return
 
-### Get movie by user
-def get_movie_by_user(db: Session, user_id: int):
-    return db.query(models.Movie).filter(models.Movie.owner_id == user_id).all()
+    ### Update Movie by movie_id
+    def update_movie_by_movie_id(self, movie_id: int, movie: schemas.Movie, limit: int):
+        db_movie = self.get_movie_by_movie_id(movie_id=movie_id, limit=limit)
+        if db_movie is None:
+            raise HTTPException(status_code=404, detail="Movie not found")
+    
+        db_movie.title = movie.title
+        db_movie.overview = movie.overview
+        db_movie.year = movie.year
+        db_movie.rating = movie.rating
+        db_movie.category = movie.category
 
-### Get movie by category
-def get_movie_by_category(db: Session, category: str, skip: int = 0, limit: int = 100):
-    return db.query(models.Movie).filter(models.Movie.category == category).offset(skip).limit(limit).all()
+        self.db.commit()
+        return
 
-### Get movie by movie_id
-def get_movie_by_movie_id(db: Session, movie_id: int, limit: int):
-    return db.query(models.Movie).filter(models.Movie.id == movie_id).limit(limit).first()
-
-# ### Update movie
-# def update_movie(db: Session, movie_id: int, limit: int, movie: schemas.Movie):
-#     db_movie = get_movie_by_movie_id(db=db, movie_id=movie_id, limit=limit)
-
-#     db_movie.title = movie.title
-#     db_movie.overview = movie.overview
-#     db_movie.year = movie.year
-#     db_movie.rating = movie.rating
-#     db_movie.category = movie.category
-
-#     db.commit()
-#     return

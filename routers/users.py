@@ -1,20 +1,24 @@
 # Python
 from typing import List
-#Pydantic
+
+# Pydantic
 from pydantic import EmailStr
+
 # FastApi
 from fastapi import APIRouter, Depends, Form,HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+
 # Local Modules
 from sql_app import crud, schemas
 from dependencies import *
-#SQL Alchemy
+
+# SQL Alchemy
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-### Get all users
+## Get all users
 @router.get(
         path="/users",
         response_model=List[schemas.User],
@@ -30,7 +34,7 @@ def get_users(
     users = crud.UserRequests(db).get_users(skip=skip, limit=limit)
     return JSONResponse(status_code=200, content=jsonable_encoder(users))
 
-### Get a user by id
+## Get a user by id
 @router.get(
         path="/users/{user_id}",
         response_model=schemas.User, 
@@ -48,7 +52,7 @@ def get_user_by_id(
         raise HTTPException(status_code=404, detail="User doesn't have a movie")
     return jsonable_encoder(user)
 
-### Create a user
+## Create a user
 @router.post(
         path="/users",
         response_model=schemas.User,
@@ -63,7 +67,7 @@ def create_a_user(
     user = crud.UserRequests(db).create_user(user=user)
     return jsonable_encoder(user)
 
-### Login
+## Login
 @router.post(
     path="/login", 
     response_model=schemas.User,
@@ -82,7 +86,7 @@ def login(
     #         return user
     # return JSONResponse(content={email :"Email or password incorrect!"})
 
-### Delete user by email
+## Delete user by email
 @router.delete(
         path="/users/delete",
         response_model=dict,
